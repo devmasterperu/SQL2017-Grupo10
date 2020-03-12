@@ -72,5 +72,27 @@ CONVERT(VARCHAR(8),GETDATE(),112) --HOY
 between CONVERT(VARCHAR(8),fecinicio,112) and --FECINICIO
 	    CONVERT(VARCHAR(8),isnull(fecfin,getdate()),112) --FECFIN
 
+--3.5
+
+
+
+select
+m.nombre as NOMBRE_MANZANA,
+concat(ltrim(p.nombres),' ',ltrim(p.apellidos)) as [NOMBRE-COMPLETO-ENCUESTADOR],
+concat(ltrim(ps.nombres),' ',ltrim(ps.apellidos)) as [NOMBRE-COMPLETO-SUPERVISOR]
+from 
+--NOMBRE_MANZANA
+Asignacion a
+inner join Manzana m on a.idmanzana=m.idmanzana
+--NOMBRE-COMPLETO-ENCUESTADOR
+inner join Trabajador t on a.idencuestador=t.idtrabajador
+inner join Persona p on t.idpersona=p.idpersona
+--[NOMBRE-COMPLETO-SUPERVISOR]
+inner join Trabajador s on a.idsupervisor=s.idtrabajador
+inner join Persona ps on s.idpersona=ps.idpersona
+where 
+CONVERT(VARCHAR(8),GETDATE(),112) --HOY
+between CONVERT(VARCHAR(8),fecinicio,112) and --FECINICIO
+	    CONVERT(VARCHAR(8),isnull(fecfin,getdate()),112) --FECFIN
 
 
