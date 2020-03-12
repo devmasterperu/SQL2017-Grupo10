@@ -38,3 +38,39 @@ p.numdoc as [NUM-DOC],
 LTRIM(p.nombres)+' '+LTRIM(p.apellidos) as [NOMBRE-COMPLETO],
 u.nom_dto as [UBIGEO]
 from Persona p inner join Ubigeo u on p.idubigeo=u.idubigeo
+
+--3.3
+
+select
+m.nombre as [NOM-MANZANA],
+s.nomsector as [NOM-SECTOR],
+concat('Mi ID en la tabla Manzana es ',m.idmanzana) as MENSAJE
+from Manzana m
+inner join Sector s on m.idsector=s.idsector
+where m.estado=1
+
+--3.4
+
+select CONVERT(VARCHAR(8),GETDATE(),112)
+select CONVERT(VARCHAR(8),isnull(NULL,getdate()),112)
+
+select
+m.nombre as NOMBRE_MANZANA,
+concat(ltrim(p.nombres),' ',ltrim(p.apellidos)) as [NOMBRE-COMPLETO-ENCUESTADOR],
+a.idsupervisor as 'ID-SUPERVISOR',
+CONVERT(VARCHAR(8),fecinicio,112) as FECINICIO,
+CONVERT(VARCHAR(8),GETDATE(),112) as FECFIN
+from 
+--NOMBRE_MANZANA
+Asignacion a
+inner join Manzana m on a.idmanzana=m.idmanzana
+--NOMBRE-COMPLETO-ENCUESTADOR
+inner join Trabajador t on a.idencuestador=t.idtrabajador
+inner join Persona p on t.idpersona=p.idpersona
+where 
+CONVERT(VARCHAR(8),GETDATE(),112) --HOY
+between CONVERT(VARCHAR(8),fecinicio,112) and --FECINICIO
+	    CONVERT(VARCHAR(8),isnull(fecfin,getdate()),112) --FECFIN
+
+
+
