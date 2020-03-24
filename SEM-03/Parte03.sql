@@ -31,4 +31,16 @@ order by idencuestador desc
 
 --3.8
 
-
+select
+t.usuario as USUARIO,
+t.idtrabajador as ID_ENCUESTADOR,
+CONCAT(p.nombres,' ',p.apellidos) AS NOMBRE_COMPLETO,
+ISNULL(a.idmanzana,0) as ID_MANZANA,
+ISNULL(a.fecinicio,'9999-12-31') as FEC_INICIO,
+ISNULL(a.fecfin,'9999-12-31') as FEC_FIN,
+t.estado,
+t.tipo
+from Trabajador t
+inner join Persona p on t.idpersona=p.idpersona
+left join Asignacion a on t.idtrabajador=a.idencuestador
+where t.estado=1 and t.tipo='E'
