@@ -1,5 +1,4 @@
---04.05
-
+--04.05.a
 insert into [ServiciosG10BD-2].dbo.Ficha(idcliente, manzana, tipoconsumidor, numhabitantes,
 coordenadax, coordenaday, idencuestador, montopago,estado)
 values
@@ -103,3 +102,27 @@ values
 (199,'0008','PEQUEÑO CONSUMIDOR',3,'-11.0790016300638','-77.5953089580287',40,60,'A'),
 (392,'0009','GRAN CONSUMIDOR',4,'-11.1050724549347','-77.5916774273775',11,100,'A'),
 (241,'0011','GRAN CONSUMIDOR',1,'-11.0923575680998','-77.5937602205845',36,65,'A')
+
+--04.05.b
+
+select top 1 * from [ServiciosG10BD].dbo.Ficha
+select top 1 * from [ServiciosG10BD-2].dbo.Ficha
+
+create table fichasInsertadas2
+(
+idficha int,
+idcliente int
+)
+insert into [ServiciosG10BD].dbo.Ficha(idcliente,idmanzana, tipoconsumidor, numhabitantes, coordenadax, coordenaday,
+idencuestador, montopago)
+--output inserted.idficha,inserted.idcliente into fichasInsertadas2
+select top 1 idcliente,m.idmanzana, substring(tipoconsumidor,1,1) as tipoconsumidor, numhabitantes, coordenadax, coordenaday,
+idencuestador, montopago
+from [ServiciosG10BD-2].dbo.Ficha f inner join [ServiciosG10BD].dbo.Manzana m on f.manzana=m.nombre
+
+select * from fichasInsertadas2
+
+select count(1) from [ServiciosG10BD].dbo.Ficha--799+2(de prueba)
+
+select * from [ServiciosG10BD].dbo.Ficha
+order by idficha
