@@ -88,3 +88,98 @@ inner join Persona p on c.idpersona=p.idpersona
 where f.montopago>cast(ROUND((select AVG(montopago) from Ficha),2) as decimal(4,2))--CI
 --where f.montopago>75.73
 order by CLIENTE,montopago desc
+
+--05.12
+--TOTAL POR ENCUESTADOR
+	select idencuestador,count(1) as totfichas from Ficha group by idencuestador
+--PROMEDIO: 
+	select AVG(re.totfichas) 
+	from (select idencuestador,count(1) as totfichas from Ficha group by idencuestador) re
+--SUBCONSULTAS
+select 
+t.idtrabajador as ID_ENCUESTADOR,
+(select count(1) from Ficha f where f.idencuestador=t.idtrabajador) as TOT_FICHAS,
+(	select AVG(re.totfichas) from 
+	(select idencuestador,count(1) as totfichas from Ficha group by idencuestador) re
+) as TOTAL_PROM
+from Trabajador t
+where --TOT_FICHAS
+	  (select count(1) from Ficha f where f.idencuestador=t.idtrabajador)>
+	  --TOTAL_PROM
+	  (	select AVG(re.totfichas) from 
+		(select idencuestador,count(1) as totfichas from Ficha group by idencuestador) re
+	  )
+and t.tipo='E'
+--CTES
+WITH CTE_RE AS
+(
+	select idencuestador,count(1) as totfichas from Ficha group by idencuestador
+)
+select 
+t.idtrabajador as ID_ENCUESTADOR,
+(select count(1) from Ficha f where f.idencuestador=t.idtrabajador) as TOT_FICHAS,
+(select AVG(totfichas) from CTE_RE) as TOTAL_PROM
+from Trabajador t
+where --TOT_FICHAS
+	  (select count(1) from Ficha f where f.idencuestador=t.idtrabajador)>
+	  --TOTAL_PROM
+	  (select AVG(totfichas) from CTE_RE)
+and t.tipo='E'
+
+--VISTAS
+create view dbo.V_ReporteEncuestador
+as
+	WITH CTE_RE AS
+	(
+		select idencuestador,count(1) as totfichas from Ficha group by idencuestador
+	)
+	select 
+	t.idtrabajador as ID_ENCUESTADOR,
+	(select count(1) from Ficha f where f.idencuestador=t.idtrabajador) as TOT_FICHAS,
+	(select AVG(totfichas) from CTE_RE) as TOTAL_PROM
+	from Trabajador t
+	where --TOT_FICHAS
+		  (select count(1) from Ficha f where f.idencuestador=t.idtrabajador)>
+		  --TOTAL_PROM
+		  (select AVG(totfichas) from CTE_RE)
+	and t.tipo='E'
+	--Utilizar una VISTA
+	select * from dbo.V_ReporteEncuestador
+
+--FUNCIONES DE VALOR TABLA
+--Encapsula una lógica para su reutilización
+create function F_TOTFICHAS(@idencuestador int) returns table
+as
+return 
+	select count(1) as totfichas from Ficha f where f.idencuestador=@idencuestador
+
+select * from F_TOTFICHAS(1)
+--Modificar vista para incluir función
+alter view dbo.V_ReporteEncuestador
+as
+	WITH CTE_RE AS
+	(
+		select idencuestador,count(1) as totfichas from Ficha group by idencuestador
+	)
+	select 
+	t.idtrabajador as ID_ENCUESTADOR,
+	(select totfichas from F_TOTFICHAS(t.idtrabajador))as TOT_FICHAS,
+	(select AVG(totfichas) from CTE_RE) as TOTAL_PROM
+	from Trabajador t
+	where (select totfichas from F_TOTFICHAS(t.idtrabajador))>
+		  (select AVG(totfichas) from CTE_RE)
+	and t.tipo='E'
+	
+	--Utilizar una VISTA (Incluye SUBCONSULTAS|CTE|FUNCION VALOR TABLA)
+	select * from dbo.V_ReporteEncuestador
+	order by TOT_FICHAS desc
+
+--05.14
+
+select 
+t.usuario,
+t.contrasena,
+t.estado,
+EOMONTH(getdate()) as CIERRE
+from Trabajador t
+where exists (select 1 from Ficha f where f.idencuestador=t.idtrabajador)
