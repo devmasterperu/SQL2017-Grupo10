@@ -67,6 +67,45 @@ return
 
 	select * from F_PERSONA_DETALLE(1,'00488191')
 
+--D
+create function F_PERSONA_I() returns table
+as
+return
+	WITH CTE_PERSONA_I AS
+	(
+		select idtipo,numdoc,nombres,apellidos from Persona --997
+		intersect --común
+		select idtipo,numdoc,nombres,apellidos from PersonaCarga --505
+	)
+	select t.nombre,p.idtipo,p.numdoc,p.nombres,p.apellidos from CTE_PERSONA_I p
+	inner join TipoDocumento t on p.idtipo=t.idtipo
+
+select * from F_PERSONA_I() --493
+
+--Uso de JOIN x INTERSECT
+select distinct p.idtipo,p.numdoc,p.nombres,p.apellidos from Persona p
+inner join PersonaCarga pc on p.idtipo=pc.idtipo and p.numdoc=pc.numdoc and
+p.nombres=pc.nombres and p.apellidos=pc.apellidos --493
+
+--E
+select idtipo,numdoc,nombres,apellidos from Persona --997
+except --Quienes están en Persona pero no en PersonaCarga
+select idtipo,numdoc,nombres,apellidos from PersonaCarga --505
+		
+create function F_PERSONA_E() returns table
+as
+return
+	WITH CTE_PERSONA_E AS
+	(
+		select idtipo,numdoc,nombres,apellidos from PersonaCarga --505
+		except --Quienes están en PersonaCarga pero no en Persona
+		select idtipo,numdoc,nombres,apellidos from Persona --997
+	)
+	select t.nombre,p.idtipo,p.numdoc,p.nombres,p.apellidos from CTE_PERSONA_E p
+	inner join TipoDocumento t on p.idtipo=t.idtipo
+
+select * from F_PERSONA_E()
+
 --06.02
 --A
 create view CTE_UBIGEO_C 
@@ -81,3 +120,24 @@ select departamento,provincia,distrito from CTE_UBIGEO_C
 
 select * from CTE_UBIGEO_C
 order by departamento,provincia,distrito
+
+--B
+
+alter function F_UBIGEO_DETALLE
+(@distrito varchar(100)) returns table
+as
+return
+	WITH CTE_UBIGEO_C AS
+	(
+		select id,departamento,provincia,distrito from UbigeoCarga --1664
+		union all --Incluye combinaciones duplicadas
+		select idubigeo,nom_dpto,nom_prov,nom_dto from Ubigeo --12
+	)
+	select u.id,u.departamento,u.provincia,u.distrito from CTE_UBIGEO_C u
+	where u.distrito=@distrito
+
+	select * from F_UBIGEO_DETALLE('HUALMAY')
+
+	select id,departamento,provincia,distrito from UbigeoCarga
+	where distrito='HUALMAY'
+
