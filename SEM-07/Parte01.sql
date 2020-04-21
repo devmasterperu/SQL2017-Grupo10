@@ -167,7 +167,7 @@ execute usp_insuniuso @desc='VIVIENDA 4TO PISO',@categoria='DOM',@idficha=3 --ok
 
 --07.07
 --@idencuestador=0,@idmanzana=0,@fecinicio='2020-04-20',@fecfin=null,@idsupervisor=0
-create procedure usp_actualiza_asignacion
+alter procedure usp_actualiza_asignacion
 (
 @idencuestador int,@idmanzana int,--Identificar registro o fila
 @fecinicio date, @fecfin date, @idsupervisor int --nuevos valores
@@ -194,10 +194,78 @@ begin
 		set @mensaje='Asignación no identificada'
 	end
 
-	select @mensaje as MENSAJE,@idencuestador as ENCUESTADOR, @idencuestador as MANZANA
+	select @mensaje as MENSAJE,@idencuestador as ENCUESTADOR, @idmanzana as MANZANA
 end
 
 execute usp_actualiza_asignacion @idencuestador=0,@idmanzana=0,@fecinicio='2020-04-20',@fecfin=null,@idsupervisor=0--no_ok
 select * from Asignacion
-execute usp_actualiza_asignacion @idencuestador=11,@idmanzana=2,@fecinicio='2020-04-20',@fecfin=null,@idsupervisor=10
+execute usp_actualiza_asignacion @idencuestador=11,@idmanzana=2,@fecinicio='2020-04-20',@fecfin=null,@idsupervisor=10--ok
 select * from Asignacion where idencuestador=11 and idmanzana=2
+
+--07.08
+--execute usp_actualiza_persona @idtipo=1,@numdoc='22067190',@nombres='GIANFRANCO',
+--@apellidos='MANRIQUE VALENTIN',@sexo='M',@fecnacimiento='1990-01-09',
+--@direccion='URB. LOS CIPRESES M-24',@idubigeo=1
+
+create procedure usp_actualiza_persona
+(
+@idtipo int,@numdoc varchar(15),--Identificar registro o fila
+@nombres varchar(50), @apellidos varchar(40), @sexo varchar(1),
+@fecnacimiento date, @direccion varchar(300),@idubigeo int --nuevos valores
+)
+as
+begin
+	declare @mensaje varchar(max)
+	--Si existe persona
+	if exists(select 1 from Persona where idtipo=@idtipo and numdoc=@numdoc)
+	begin 
+		update p
+		set    --Nuevos valores
+		       p.nombres=@nombres,
+		       p.apellidos=@apellidos,
+			   p.sexo=@sexo,
+			   p.fecnacimiento=@fecnacimiento,
+			   p.direccion=@direccion,
+			   p.idubigeo=@idubigeo
+		from  Persona p
+		where idtipo=@idtipo and numdoc=@numdoc --Identificar registro o fila
+
+		set @mensaje='Persona actualizada'
+	end
+	else
+	begin
+		set @mensaje='Persona no identificada'
+	end
+
+	select @mensaje as MENSAJE, @idtipo as TIPO, @numdoc as NUMDOC
+end
+
+execute usp_actualiza_persona @idtipo=1,@numdoc='22067190',@nombres='GIANFRANCO',
+@apellidos='MANRIQUE VALENTIN',@sexo='M',@fecnacimiento='1990-01-09',
+@direccion='URB. LOS CIPRESES M-24',@idubigeo=1
+
+select * from Persona where idpersona=718
+
+--07.09
+alter procedure usp_del_unidaduso(@idunidaduso int)
+as
+begin
+	declare @mensaje varchar(max),@idunidadusodel int --declarar variables a usar
+
+	if exists(select 1 from UnidadUso where idunidaduso=@idunidaduso) --Si existe unidad de uso
+	begin
+		delete from UnidadUso where idunidaduso=@idunidaduso
+		set @mensaje='Unidad de uso eliminada'
+		set @idunidadusodel=@idunidaduso
+	end
+	else 
+	begin
+		set @mensaje='Unidad de uso no eliminada'
+		set @idunidadusodel=0
+	end
+	
+	select @mensaje as MENSAJE, @idunidadusodel as UNIDAD_USO
+end
+
+select * from UnidadUso where idunidaduso=495
+execute usp_del_unidaduso 495
