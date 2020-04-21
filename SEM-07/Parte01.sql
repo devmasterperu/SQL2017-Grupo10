@@ -135,3 +135,69 @@ end
 
 execute usp_insmanzana @nombre='0100',@estado=0,@idsector=1 --OK
 execute usp_insmanzana @nombre='0100',@estado=0,@idsector=1 --NO_OK
+
+--07.06
+
+create procedure usp_insuniuso(@desc varchar(40),@categoria char(3),@idficha int)
+as
+begin
+	declare @iduniuso int, @mensaje varchar(max)
+	
+	if not exists(select 1 from UnidadUso where descripcion=@desc and idficha=@idficha)
+	begin
+		insert into UnidadUso(descripcion,categoria,idficha)
+		values(@desc,@categoria,@idficha)
+
+		set @mensaje='Unidad de uso insertada'
+		set @iduniuso=IDENT_CURRENT('UnidadUso')
+	end
+	else
+	begin
+		set @mensaje='Unidad de uso con descripción existente en ficha'
+		set @iduniuso=0
+	end
+
+	select @mensaje as MENSAJE, @iduniuso as MANZANA
+
+end
+
+select * from UnidadUso where idficha=3
+
+execute usp_insuniuso @desc='VIVIENDA 4TO PISO',@categoria='DOM',@idficha=3 --ok
+
+--07.07
+--@idencuestador=0,@idmanzana=0,@fecinicio='2020-04-20',@fecfin=null,@idsupervisor=0
+create procedure usp_actualiza_asignacion
+(
+@idencuestador int,@idmanzana int,--Identificar registro o fila
+@fecinicio date, @fecfin date, @idsupervisor int --nuevos valores
+)
+as
+begin
+	declare @mensaje varchar(max)
+	--Si existe asignación
+	if exists(select 1 from Asignacion where idencuestador=@idencuestador and idmanzana=@idmanzana)
+	begin 
+		update a
+		set    --Nuevos valores
+		       a.fecinicio=@fecinicio,
+		       a.fecfin=@fecfin,
+			   a.idsupervisor=@idsupervisor
+		from  Asignacion a
+		where a.idencuestador=@idencuestador and a.idmanzana=@idmanzana --Identificar registro o fila
+
+		set @mensaje='Asignación actualizada'
+	end
+	--Si no encuentro la asignación	
+	else
+	begin
+		set @mensaje='Asignación no identificada'
+	end
+
+	select @mensaje as MENSAJE,@idencuestador as ENCUESTADOR, @idencuestador as MANZANA
+end
+
+execute usp_actualiza_asignacion @idencuestador=0,@idmanzana=0,@fecinicio='2020-04-20',@fecfin=null,@idsupervisor=0--no_ok
+select * from Asignacion
+execute usp_actualiza_asignacion @idencuestador=11,@idmanzana=2,@fecinicio='2020-04-20',@fecfin=null,@idsupervisor=10
+select * from Asignacion where idencuestador=11 and idmanzana=2
